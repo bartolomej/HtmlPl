@@ -1,8 +1,8 @@
 # HTML Programming Language
 
-People make fun of HTML not being a real programming language.
+People often make fun of HTML for not being a real programming language.
 
-This changes now. Introducing HtmlPl, a HTML Programming Language.
+This is no longer the case.
 
 ## Guide
 
