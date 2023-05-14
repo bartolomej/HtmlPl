@@ -49,8 +49,7 @@ describe('HtmlPl interpreter', function () {
             runtime: mockRuntime
         });
         const cstNode = parse(`
-           <var name="myVariable">1</var> 
-           <output value="myVariable"/>
+           <output value="myVariable">1</output>
         `);
 
         await interpreter.executeProgram(cstNode);
@@ -82,7 +81,9 @@ describe('HtmlPl interpreter', function () {
         const cstNode = parse(`
            <var name="myVariable">1</var>
            <form value="myVariable">
-                <output value="myVariable" />
+                <output>
+                    <var name="myVariable" />
+                </output>
                 <var name="myVariable">0</var>
            </form>
         `);
@@ -116,7 +117,9 @@ describe('HtmlPl interpreter', function () {
         const cstNode = parse(`
            <var name="myVariable">3</var>
            <form value="myVariable">
-                <output value="myVariable" />
+                <output>
+                    <var name="myVariable" /> 
+                </output>
                 <var name="myVariable">
                     <math>
                         <var name="myVariable" />

@@ -8,7 +8,7 @@ enum HtmlPlNodeType {
     EXPR_OL = "OL", // array declaration
     EXPR_UL = "UL", // array declaration
     EXPR_LI = "LI", // for declaring array elements
-    EXPR_INPUT   = "INPUT", // stdin
+    EXPR_INPUT = "INPUT", // stdin
     STMT_OUTPUT = "OUTPUT", // stdout
     // conditional logic
     EXPR_SELECT = "SELECT",
@@ -89,9 +89,13 @@ export class HtmlPlInterpreter {
     }
 
     private async executeOutputStmt(node: HTMLElement) {
-        const targetVariableName = node.attributes["value"];
-        const targetValue = this.currentEnvironment.get(targetVariableName);
-        this.runtime.print(targetValue);
+        const childNodes = this.filterNodes(node.childNodes);
+        if (childNodes.length !== 1) {
+            throw new Error("Expected a single child node in OUTPUT")
+        }
+        this.runtime.print(
+            await this.evaluateExpression(childNodes[0])
+        )
     }
 
     private async evaluateExpression(node: Node): Promise<unknown> {

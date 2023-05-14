@@ -19,6 +19,12 @@ Here is how you declare a variable named "myVariable", with an initial value of 
 </var>
 ```
 
+Var is an expression that can also be used to return the current variable value by omitting child nodes:
+
+```html
+<var name="myVariable">
+```
+
 ### Conditional logic
 
 You can use the select-option expression to perform conditional logic.
@@ -61,5 +67,7 @@ Print value to standard output:
 
 ```html
 <var name="myVariable">1</var>
-<output value="myVariable"/>
+<output>
+    <var name="myVariable" />
+</output>
 ```
