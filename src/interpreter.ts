@@ -10,8 +10,6 @@ enum HtmlPlNodeType {
     EXPR_LI = "LI", // for declaring array elements
     EXPR_INPUT   = "INPUT", // stdin
     STMT_OUTPUT = "OUTPUT", // stdout
-    // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/data
-    DATA = "DATA",
     // conditional logic
     EXPR_SELECT = "SELECT",
     EXPR_OPTION = "OPTION",
@@ -123,13 +121,19 @@ export class HtmlPlInterpreter {
             case HtmlPlNodeType.EXPR_SELECT:
                 return this.evaluateSelectExpression(nonTextNode);
             case HtmlPlNodeType.EXPR_INPUT:
-                return this.executeInputExpr(nonTextNode);
+                return this.evaluateInputExpr(nonTextNode);
+            case HtmlPlNodeType.EXPR_MATH:
+                return this.evaluateMathExpr(nonTextNode);
             default:
                 throw new Error(`Unknown expression node: ${nonTextNode.tagName}`)
         }
     }
 
-    private async executeInputExpr(node: HTMLElement): Promise<unknown> {
+    private evaluateMathExpr(node: HTMLElement): Promise<unknown> {
+        return eval(node.text);
+    }
+
+    private async evaluateInputExpr(node: HTMLElement): Promise<unknown> {
         return this.runtime.prompt();
     }
 
@@ -143,7 +147,7 @@ export class HtmlPlInterpreter {
         const childNodes = this.filterNodes(node.childNodes);
         const targetVariableName = node.attributes["value"];
         const targetValue = this.currentEnvironment.get(targetVariableName);
-        const cases = childNodes.filter(node => (node as HTMLElement).attributes["value"]);
+        const cases = childNodes.filter(node => (node as HTMLElement).tagName === HtmlPlNodeType.EXPR_OPTION);
         const matchedCase = cases.find(comparisonCase => this.isEqual((comparisonCase as HTMLElement).attributes["value"], targetValue))
         if (!matchedCase) {
             return null;

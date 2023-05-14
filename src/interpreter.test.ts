@@ -90,4 +90,20 @@ describe('HtmlPl interpreter', function () {
 
         expect(mockRuntime.valuesPrinted).toEqual(["1"])
     });
+
+    it('should evaluate a simple math expression', async function () {
+        const mockRuntime = new HtmlPlMockRuntime();
+        const interpreter = new HtmlPlInterpreter({
+            runtime: mockRuntime
+        });
+        const cstNode = parse(`
+           <var name="myVariable">
+                <math>1 + 2</math>
+           </var>
+        `);
+
+        await interpreter.executeProgram(cstNode);
+
+        expect(interpreter.currentEnvironment.get("myVariable")).toEqual(3)
+    });
 });
