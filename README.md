@@ -4,6 +4,39 @@ People often make fun of HTML for not being a real programming language.
 
 This is no longer the case.
 
+## Sample programs
+
+### Sum of natural numbers
+
+```html
+<!-- Sum of the first N numbers -->
+<var name="sum">0</var>
+<var name="n"><input/></var>
+
+<form value="n">
+    <!-- Increment the sum by n -->
+    <var name="sum">
+        <math>
+            <var name="sum"/>
+            +
+            <var name="n"/>
+        </math>
+    </var>
+
+    <!-- Decrement n by 1 -->
+    <var name="n">
+        <math>
+            <var name="n"/>
+            - 1
+        </math>
+    </var>
+</form>
+
+<output>
+    <var name="sum"/>
+</output>
+```
+
 ## Guide
 
 ### Declaring a variable
