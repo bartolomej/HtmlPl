@@ -36,7 +36,13 @@ This is similar to the switch-case statement in other languages.
 
 ### Input / Output
 
-Print value to standard input:
+Read value from standard input:
+
+```html
+<var name="myVariable"><input /></var>
+```
+
+Print value to standard output:
 
 ```html
 <var name="myVariable">1</var>

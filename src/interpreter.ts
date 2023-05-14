@@ -8,7 +8,7 @@ enum HtmlPlNodeType {
     EXPR_OL = "OL", // array declaration
     EXPR_UL = "UL", // array declaration
     EXPR_LI = "LI", // for declaring array elements
-    STMT_INPUT = "INPUT", // stdin
+    EXPR_INPUT   = "INPUT", // stdin
     STMT_OUTPUT = "OUTPUT", // stdout
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/data
     DATA = "DATA",
@@ -58,16 +58,17 @@ export class HtmlPlInterpreter {
     // HtmlPl program is a list of statements.
     // Execute accepts a root node with child nodes that represent statements.
     // Text nodes with empty (trimmed) value are skipped for now.
-    public executeProgram(htmlNode: HTMLElement) {
+    public async executeProgram(htmlNode: HTMLElement) {
         // @ts-ignore tag name comparison with enum
         if (htmlNode.tagName !== HtmlPlNodeType.PROGRAM_ROOT) {
             throw new Error(`Expected root html node, found: ${htmlNode.tagName}`);
         }
-        this.filterNodes(htmlNode.childNodes)
-            .map(child => this.executeStatement(child as HTMLElement))
+        for (const child of this.filterNodes(htmlNode.childNodes)) {
+            await this.executeStatement(child as HTMLElement)
+        }
     }
 
-    public executeStatement(htmlNode: HTMLElement) {
+    public async executeStatement(htmlNode: HTMLElement) {
         switch (htmlNode.tagName) {
             case HtmlPlNodeType.STMT_VAR:
                 return this.executeVarStmt(htmlNode);
@@ -78,13 +79,13 @@ export class HtmlPlInterpreter {
         }
     }
 
-    private executeOutputStmt(node: HTMLElement) {
+    private async executeOutputStmt(node: HTMLElement) {
         const targetVariableName = node.attributes["value"];
         const targetValue = this.currentEnvironment.get(targetVariableName);
         this.runtime.print(targetValue);
     }
 
-    private executeVarStmt(node: HTMLElement) {
+    private async executeVarStmt(node: HTMLElement) {
         const {attributes} = node;
         const childNodes = this.filterNodes(node.childNodes);
         const name = attributes["name"];
@@ -94,11 +95,11 @@ export class HtmlPlInterpreter {
         if (childNodes.length > 1) {
             throw new Error(`Expected a single value child in <var>`)
         }
-        const value = this.evaluateExpression(childNodes[0] as HTMLElement);
+        const value = await this.evaluateExpression(childNodes[0] as HTMLElement);
         this.currentEnvironment.set(name, value);
     }
 
-    private evaluateExpression(node: Node): unknown {
+    private async evaluateExpression(node: Node): Promise<unknown> {
         if (node.nodeType === NodeType.TEXT_NODE) {
             return node.text;
         }
@@ -109,18 +110,24 @@ export class HtmlPlInterpreter {
                 return this.evaluateListExpression(nonTextNode);
             case HtmlPlNodeType.EXPR_SELECT:
                 return this.evaluateSelectExpression(nonTextNode);
+            case HtmlPlNodeType.EXPR_INPUT:
+                return this.executeInputExpr(nonTextNode);
             default:
                 throw new Error(`Unknown expression node: ${nonTextNode.tagName}`)
         }
     }
 
-    private evaluateListExpression(node: HTMLElement): unknown {
+    private async executeInputExpr(node: HTMLElement): Promise<unknown> {
+        return this.runtime.prompt();
+    }
+
+    private async evaluateListExpression(node: HTMLElement): Promise<unknown> {
         const listElementNodes = this.filterNodes(node.childNodes)
             .filter(node => (node as HTMLElement).tagName === HtmlPlNodeType.EXPR_LI);
         return listElementNodes.map(node => node.text);
     }
 
-    private evaluateSelectExpression(node: HTMLElement): unknown {
+    private async evaluateSelectExpression(node: HTMLElement): Promise<unknown> {
         const childNodes = this.filterNodes(node.childNodes);
         const targetVariableName = node.attributes["value"];
         const targetValue = this.currentEnvironment.get(targetVariableName);

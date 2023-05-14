@@ -4,7 +4,7 @@ import {HtmlPlMockRuntime} from "./runtimes/mock-runtime";
 
 
 describe('HtmlPl interpreter', function () {
-    it('should evaluate a simple html expression', function () {
+    it('should evaluate a simple html expression', async function () {
         const mockRuntime = new HtmlPlMockRuntime();
         const interpreter = new HtmlPlInterpreter({
             runtime: mockRuntime
@@ -17,12 +17,12 @@ describe('HtmlPl interpreter', function () {
                 </ul>
            </var> 
         `);
-        interpreter.executeProgram(cstNode);
+        await interpreter.executeProgram(cstNode);
 
         expect(interpreter.currentEnvironment.get("myVariable")).toEqual(["1", "2"])
     });
 
-    it('should evaluate a simple switch expression', function () {
+    it('should evaluate a simple switch expression', async function () {
         const mockRuntime = new HtmlPlMockRuntime();
         const interpreter = new HtmlPlInterpreter({
             runtime: mockRuntime
@@ -36,13 +36,13 @@ describe('HtmlPl interpreter', function () {
                 </select>
             </var>
         `);
-        interpreter.executeProgram(cstNode);
+        await interpreter.executeProgram(cstNode);
 
         expect(interpreter.currentEnvironment.get("myVariable")).toEqual("1")
         expect(interpreter.currentEnvironment.get("myCalculatedVariable")).toEqual("It's true")
     });
 
-    it('should evaluate a simple output statement', function () {
+    it('should evaluate a simple output statement', async function () {
         const mockRuntime = new HtmlPlMockRuntime();
         const interpreter = new HtmlPlInterpreter({
             runtime: mockRuntime
@@ -52,8 +52,23 @@ describe('HtmlPl interpreter', function () {
            <output value="myVariable"/>
         `);
 
-        interpreter.executeProgram(cstNode);
+        await interpreter.executeProgram(cstNode);
 
         expect(mockRuntime.valuesPrinted).toEqual(["1"]);
+    });
+
+    it('should evaluate a simple input statement', async function () {
+        const mockRuntime = new HtmlPlMockRuntime();
+        const interpreter = new HtmlPlInterpreter({
+            runtime: mockRuntime
+        });
+        const cstNode = parse(`
+           <var name="myVariable"><input /></var>
+        `);
+
+        mockRuntime.valuesToRead.push("Hello World")
+        await interpreter.executeProgram(cstNode);
+
+        expect(interpreter.currentEnvironment.get("myVariable")).toEqual("Hello World")
     });
 });
