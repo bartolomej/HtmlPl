@@ -7,7 +7,8 @@ enum HtmlPlNodeType {
     OL = "OL", // array declaration
     UL = "UL", // array declaration
     LI = "LI", // for declaring array elements
-    INPUT = "INPUT", // for reading from stdin
+    INPUT = "INPUT", // stdin
+    OUTPUT = "OUTPUT", // stdout
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/data
     DATA = "DATA",
     // conditional logic
@@ -15,7 +16,9 @@ enum HtmlPlNodeType {
     OPTION = "OPTION",
     TIME = "TIME",
     // https://developer.mozilla.org/en-US/docs/Web/MathML/Element/math
-    MATH = "MATH"
+    MATH = "MATH",
+    // For m loop
+    FORM = "FORM",
 }
 
 /**
@@ -80,13 +83,19 @@ export class HtmlPlInterpreter {
         this.currentEnvironment.set(name, value);
     }
 
-    private evaluateExpression(node: HTMLElement): unknown {
-        switch (node.tagName) {
+    private evaluateExpression(node: Node): unknown {
+        if (node.nodeType === NodeType.TEXT_NODE) {
+            return node.text;
+        }
+        const nonTextNode = node as HTMLElement;
+        switch (nonTextNode.tagName) {
             case HtmlPlNodeType.OL:
             case HtmlPlNodeType.UL:
-                return this.evaluateListExpression(node);
+                return this.evaluateListExpression(nonTextNode);
+            case HtmlPlNodeType.SELECT:
+                return this.evaluateSelectExpression(nonTextNode);
             default:
-                throw new Error(`Unknown expression node: ${node.tagName}`)
+                throw new Error(`Unknown expression node: ${nonTextNode.tagName}`)
         }
     }
 
@@ -94,6 +103,28 @@ export class HtmlPlInterpreter {
         const listElementNodes = this.filterNodes(node.childNodes)
             .filter(node => (node as HTMLElement).tagName === HtmlPlNodeType.LI);
         return listElementNodes.map(node => node.text);
+    }
+
+    private evaluateSelectExpression(node: HTMLElement): unknown {
+        const childNodes = this.filterNodes(node.childNodes);
+        const targetVariableName = node.attributes["value"];
+        const targetValue = this.currentEnvironment.get(targetVariableName);
+        const cases = childNodes.filter(node => (node as HTMLElement).attributes["value"]);
+        const matchedCase = cases.find(comparisonCase => this.isEqual((comparisonCase as HTMLElement).attributes["value"], targetValue))
+        if (!matchedCase) {
+            return null;
+        }
+        const matchedCaseChildren = matchedCase.childNodes;
+        if (matchedCaseChildren.length !== 1) {
+            throw new Error("Expected OPTION to have a single child node.")
+        }
+        return this.evaluateExpression(matchedCaseChildren[0]);
+    }
+
+    private isEqual(value1: unknown, value2: unknown) {
+        // Non-strict comparison is intentional here,
+        // as we want to be more permissive.
+        return value1 == value2;
     }
 
     private filterNodes(nodes: Node[]) {
