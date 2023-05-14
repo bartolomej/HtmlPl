@@ -4,7 +4,7 @@ import {HtmlPlRuntime} from "./runtimes/runtime";
 enum HtmlPlNodeType {
     PROGRAM_ROOT = null,
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/var
-    STMT_VAR = "VAR", // variable declaration
+    EXPR_VAR = "VAR", // variable declaration
     EXPR_OL = "OL", // array declaration
     EXPR_UL = "UL", // array declaration
     EXPR_LI = "LI", // for declaring array elements
@@ -68,14 +68,13 @@ export class HtmlPlInterpreter {
 
     public async executeStatement(htmlNode: HTMLElement) {
         switch (htmlNode.tagName) {
-            case HtmlPlNodeType.STMT_VAR:
-                return this.executeVarStmt(htmlNode);
             case HtmlPlNodeType.STMT_OUTPUT:
                 return this.executeOutputStmt(htmlNode);
             case HtmlPlNodeType.STMT_FORM:
                 return this.executeFormStmt(htmlNode);
             default:
-                throw new Error(`Invalid HTML element: ${htmlNode.tagName}`)
+                // Expressions are also valid statements, but their value is ignored
+                return this.evaluateExpression(htmlNode);
         }
     }
 
@@ -95,20 +94,6 @@ export class HtmlPlInterpreter {
         this.runtime.print(targetValue);
     }
 
-    private async executeVarStmt(node: HTMLElement) {
-        const {attributes} = node;
-        const childNodes = this.filterNodes(node.childNodes);
-        const name = attributes["name"];
-        if (childNodes.length === 0) {
-            throw new Error(`Expected value child in <var>`)
-        }
-        if (childNodes.length > 1) {
-            throw new Error(`Expected a single value child in <var>`)
-        }
-        const value = await this.evaluateExpression(childNodes[0] as HTMLElement);
-        this.currentEnvironment.set(name, value);
-    }
-
     private async evaluateExpression(node: Node): Promise<unknown> {
         if (node.nodeType === NodeType.TEXT_NODE) {
             return node.text;
@@ -124,13 +109,35 @@ export class HtmlPlInterpreter {
                 return this.evaluateInputExpr(nonTextNode);
             case HtmlPlNodeType.EXPR_MATH:
                 return this.evaluateMathExpr(nonTextNode);
+            case HtmlPlNodeType.EXPR_VAR:
+                return this.evaluateVarExpr(nonTextNode);
             default:
                 throw new Error(`Unknown expression node: ${nonTextNode.tagName}`)
         }
     }
 
-    private evaluateMathExpr(node: HTMLElement): Promise<unknown> {
-        return eval(node.text);
+    private async evaluateVarExpr(node: HTMLElement) {
+        const {attributes} = node;
+        const childNodes = this.filterNodes(node.childNodes);
+        const name = attributes["name"];
+        if (childNodes.length > 1) {
+            throw new Error(`Expected a single value child in <var>`)
+        }
+        if (childNodes.length === 1) {
+            const value = await this.evaluateExpression(childNodes[0] as HTMLElement);
+            this.currentEnvironment.set(name, value);
+        }
+        return this.currentEnvironment.get(name);
+    }
+
+    private async evaluateMathExpr(node: HTMLElement): Promise<unknown> {
+        const childNodes = this.filterNodes(node.childNodes);
+        let valueToEvaluate = "";
+        for (const child of childNodes) {
+            const result = await this.evaluateExpression(child);
+            valueToEvaluate += result;
+        }
+        return eval(valueToEvaluate);
     }
 
     private async evaluateInputExpr(node: HTMLElement): Promise<unknown> {

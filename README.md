@@ -34,6 +34,21 @@ This is similar to the switch-case statement in other languages.
 </var>
 ```
 
+### Loops
+
+This is how you write a "for-m" loop that runs 3 times: 
+```html
+ <var name="myVariable">3</var>
+<form value="myVariable">
+    <var name="myVariable">
+        <math>
+            <var name="myVariable"/>
+            - 1
+        </math>
+    </var>
+</form>
+```
+
 ### Input / Output
 
 Read value from standard input:

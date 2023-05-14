@@ -1,6 +1,7 @@
 import {HtmlPlInterpreter} from "./interpreter";
 import parse from "node-html-parser";
 import {HtmlPlMockRuntime} from "./runtimes/mock-runtime";
+import mock = jest.mock;
 
 
 describe('HtmlPl interpreter', function () {
@@ -105,5 +106,29 @@ describe('HtmlPl interpreter', function () {
         await interpreter.executeProgram(cstNode);
 
         expect(interpreter.currentEnvironment.get("myVariable")).toEqual(3)
+    });
+
+    it('should evaluate 3 iterations of a loop', async function () {
+        const mockRuntime = new HtmlPlMockRuntime();
+        const interpreter = new HtmlPlInterpreter({
+            runtime: mockRuntime
+        });
+        const cstNode = parse(`
+           <var name="myVariable">3</var>
+           <form value="myVariable">
+                <output value="myVariable" />
+                <var name="myVariable">
+                    <math>
+                        <var name="myVariable" />
+                        - 1
+                    </math>
+                </var>
+           </form>
+        `);
+
+        await interpreter.executeProgram(cstNode);
+
+        expect(mockRuntime.valuesPrinted).toEqual(["3", 2, 1])
+        expect(interpreter.currentEnvironment.get("myVariable")).toEqual(0)
     });
 });
