@@ -1,24 +1,25 @@
 import {HTMLElement, Node, NodeType} from "node-html-parser";
+import {HtmlPlRuntime} from "./runtimes/runtime";
 
 enum HtmlPlNodeType {
     PROGRAM_ROOT = null,
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/var
     STMT_VAR = "VAR", // variable declaration
-    OL = "OL", // array declaration
-    UL = "UL", // array declaration
-    LI = "LI", // for declaring array elements
-    INPUT = "INPUT", // stdin
-    OUTPUT = "OUTPUT", // stdout
+    EXPR_OL = "OL", // array declaration
+    EXPR_UL = "UL", // array declaration
+    EXPR_LI = "LI", // for declaring array elements
+    STMT_INPUT = "INPUT", // stdin
+    STMT_OUTPUT = "OUTPUT", // stdout
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/data
     DATA = "DATA",
     // conditional logic
-    SELECT = "SELECT",
-    OPTION = "OPTION",
-    TIME = "TIME",
+    EXPR_SELECT = "SELECT",
+    EXPR_OPTION = "OPTION",
+    EXPR_TIME = "TIME",
     // https://developer.mozilla.org/en-US/docs/Web/MathML/Element/math
-    MATH = "MATH",
+    EXPR_MATH = "MATH",
     // For m loop
-    FORM = "FORM",
+    STMT_FORM = "FORM",
 }
 
 /**
@@ -40,12 +41,18 @@ class HtmlPlEnvironment {
     }
 }
 
+export type HtmlPlInterpreterOptions = {
+    runtime: HtmlPlRuntime;
+}
+
 export class HtmlPlInterpreter {
 
     public currentEnvironment: HtmlPlEnvironment;
+    public runtime: HtmlPlRuntime;
 
-    constructor() {
-        this.currentEnvironment = new HtmlPlEnvironment()
+    constructor(options: HtmlPlInterpreterOptions) {
+        this.currentEnvironment = new HtmlPlEnvironment();
+        this.runtime = options.runtime;
     }
 
     // HtmlPl program is a list of statements.
@@ -64,9 +71,17 @@ export class HtmlPlInterpreter {
         switch (htmlNode.tagName) {
             case HtmlPlNodeType.STMT_VAR:
                 return this.executeVarStmt(htmlNode);
+            case HtmlPlNodeType.STMT_OUTPUT:
+                return this.executeOutputStmt(htmlNode);
             default:
                 throw new Error(`Invalid HTML element: ${htmlNode.tagName}`)
         }
+    }
+
+    private executeOutputStmt(node: HTMLElement) {
+        const targetVariableName = node.attributes["value"];
+        const targetValue = this.currentEnvironment.get(targetVariableName);
+        this.runtime.print(targetValue);
     }
 
     private executeVarStmt(node: HTMLElement) {
@@ -89,10 +104,10 @@ export class HtmlPlInterpreter {
         }
         const nonTextNode = node as HTMLElement;
         switch (nonTextNode.tagName) {
-            case HtmlPlNodeType.OL:
-            case HtmlPlNodeType.UL:
+            case HtmlPlNodeType.EXPR_OL:
+            case HtmlPlNodeType.EXPR_UL:
                 return this.evaluateListExpression(nonTextNode);
-            case HtmlPlNodeType.SELECT:
+            case HtmlPlNodeType.EXPR_SELECT:
                 return this.evaluateSelectExpression(nonTextNode);
             default:
                 throw new Error(`Unknown expression node: ${nonTextNode.tagName}`)
@@ -101,7 +116,7 @@ export class HtmlPlInterpreter {
 
     private evaluateListExpression(node: HTMLElement): unknown {
         const listElementNodes = this.filterNodes(node.childNodes)
-            .filter(node => (node as HTMLElement).tagName === HtmlPlNodeType.LI);
+            .filter(node => (node as HTMLElement).tagName === HtmlPlNodeType.EXPR_LI);
         return listElementNodes.map(node => node.text);
     }
 

@@ -33,3 +33,12 @@ This is similar to the switch-case statement in other languages.
     </select>
 </var>
 ```
+
+### Input / Output
+
+Print value to standard input:
+
+```html
+<var name="myVariable">1</var>
+<output value="myVariable"/>
+```
