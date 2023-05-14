@@ -74,8 +74,20 @@ export class HtmlPlInterpreter {
                 return this.executeVarStmt(htmlNode);
             case HtmlPlNodeType.STMT_OUTPUT:
                 return this.executeOutputStmt(htmlNode);
+            case HtmlPlNodeType.STMT_FORM:
+                return this.executeFormStmt(htmlNode);
             default:
                 throw new Error(`Invalid HTML element: ${htmlNode.tagName}`)
+        }
+    }
+
+    private async executeFormStmt(node: HTMLElement) {
+        const conditionVariableName = node.attributes["value"];
+        while (!this.isEqual(this.currentEnvironment.get(conditionVariableName), "0")) {
+            const childStatements = this.filterNodes(node.childNodes);
+            for (const child of childStatements) {
+                await this.executeStatement(child as HTMLElement)
+            }
         }
     }
 

@@ -71,4 +71,23 @@ describe('HtmlPl interpreter', function () {
 
         expect(interpreter.currentEnvironment.get("myVariable")).toEqual("Hello World")
     });
+
+
+    it('should evaluate a simple loop statement', async function () {
+        const mockRuntime = new HtmlPlMockRuntime();
+        const interpreter = new HtmlPlInterpreter({
+            runtime: mockRuntime
+        });
+        const cstNode = parse(`
+           <var name="myVariable">1</var>
+           <form value="myVariable">
+                <output value="myVariable" />
+                <var name="myVariable">0</var>
+           </form>
+        `);
+
+        await interpreter.executeProgram(cstNode);
+
+        expect(mockRuntime.valuesPrinted).toEqual(["1"])
+    });
 });
