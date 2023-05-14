@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HTML Programming Language</title>
+</head>
+<body>
+<label>
+    <textarea rows="30" cols="50"></textarea>
+</label>
+<button id="execute">Execute</button>
+<script src="../dist/bundle.js"></script>
+<script>
+    const executeBtn = document.querySelector("#execute");
+    const inputArea = document.querySelector("textarea");
+    const htmlPlWeb = new HtmlPlWeb();
+    executeBtn.addEventListener("click", async () => {
+        try {
+            await htmlPlWeb.run(inputArea.value);
+        } catch (e) {
+            alert("HtmlPl error: " + e.message)
+        }
+    })
+</script>
+</body>
+</html>
