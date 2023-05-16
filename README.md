@@ -1,10 +1,20 @@
-# HTML Programming Language
+# HtmlPl
 
-People often make fun of HTML for not being a real programming language.
+Contrary to what [some](https://stackoverflow.com/questions/145176/is-html-considered-a-programming-language#answer-145179) [people](https://www.reddit.com/r/explainlikeimfive/comments/6oahcu/eli5_why_isnt_html_considered_programming/) [believe](https://www.reddit.com/r/ProgrammerHumor/comments/sg3ocj/html_is_not_a_programming_language_btw/), HTML **is** a programming language - you write instructions (markup), the browser executes them and gives you the output (UI). Seems like programming to me.
 
-This is no longer the case.
+But nevertheless, some people still think HTML is not a real programming language. HtmlPl (stands for HTML Programming Language) proves those people wrong.
+
+HtmlPl is an HTML interpreter, which allows you to use [standard HTML tags](https://html.spec.whatwg.org/#semantics) to write logical programs.
 
 ## Sample programs
+
+### Hello World
+
+This is a hello world program in HtmlPl:
+
+```html
+<output>Hello World</output>
+```
 
 ### Sum of natural numbers
 
@@ -37,7 +47,7 @@ This is no longer the case.
 </output>
 ```
 
-## Guide
+## Syntax
 
 ### Declaring a variable
 
@@ -93,7 +103,9 @@ This is how you write a "for-m" loop that runs 3 times:
 Read value from standard input:
 
 ```html
-<var name="myVariable"><input /></var>
+<var name="myVariable">
+    <input />
+</var>
 ```
 
 Print value to standard output:
@@ -104,3 +116,11 @@ Print value to standard output:
     <var name="myVariable" />
 </output>
 ```
+
+## Semantics
+
+HtmlPl has very permissive semantics.
+
+### Scope
+
+There is no concept of "local scope". All declared variables live in the global scope.
